@@ -152,7 +152,7 @@ async fn run() {
                             &surface_view,
                             screen_descriptor,
                             |ui| {
-                                egui::Window::new("Egui Rust WGPU Hello!")
+                                egui::Window::new("winit + egui + wgpu says hello!")
                                     .resizable(true)
                                     .vscroll(true)
                                     .default_open(false)
