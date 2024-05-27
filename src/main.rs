@@ -1,7 +1,7 @@
 mod egui_tools;
 
 use crate::egui_tools::EguiRenderer;
-use egui_wgpu::{ScreenDescriptor, WgpuConfiguration};
+use egui_wgpu::{ScreenDescriptor};
 use std::sync::Arc;
 use wgpu::{Backends, InstanceDescriptor, TextureFormat};
 use winit::dpi::PhysicalSize;
@@ -106,13 +106,18 @@ async fn run() {
                         }
                     }
                     WindowEvent::ActivationTokenDone { .. } => {}
-                    WindowEvent::Resized(_) => {}
+                    WindowEvent::Resized(new_size) => {
+                        // Resize surface:
+                        config.width = new_size.width;
+                        config.height = new_size.height;
+                        surface.configure(&device, &config);
+                    }
                     WindowEvent::Moved(_) => {}
                     WindowEvent::Destroyed => {}
                     WindowEvent::DroppedFile(_) => {}
                     WindowEvent::HoveredFile(_) => {}
                     WindowEvent::HoveredFileCancelled => {}
-                    WindowEvent::Focused(x) => {}
+                    WindowEvent::Focused(_) => {}
                     WindowEvent::Ime(_) => {}
                     WindowEvent::CursorMoved { .. } => {}
                     WindowEvent::CursorEntered { .. } => {}
