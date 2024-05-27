@@ -1,4 +1,5 @@
 mod egui_tools;
+
 use crate::egui_tools::EguiRenderer;
 use egui_wgpu::{ScreenDescriptor, WgpuConfiguration};
 use std::sync::Arc;
@@ -74,12 +75,14 @@ async fn run() {
     };
 
     surface.configure(&device, &config);
-    let wgpu_egui_config = WgpuConfiguration::default();
 
     let mut egui_renderer = EguiRenderer::new(&device, config.format, None, 1, &window);
 
     let mut close_requested = false;
     let mut modifiers = ModifiersState::default();
+
+    let mut scale_factor = 1.0;
+
     event_loop.run(move |event, elwt| {
         elwt.set_control_flow(ControlFlow::Poll);
 
@@ -141,7 +144,7 @@ async fn run() {
 
                         let screen_descriptor = ScreenDescriptor {
                             size_in_pixels: [config.width, config.height],
-                            pixels_per_point: window.scale_factor() as f32,
+                            pixels_per_point: window.scale_factor() as f32 * scale_factor,
                         };
 
                         egui_renderer.draw(
@@ -151,16 +154,31 @@ async fn run() {
                             &window,
                             &surface_view,
                             screen_descriptor,
-                            |ui| {
+                            |ctx| {
                                 egui::Window::new("winit + egui + wgpu says hello!")
                                     .resizable(true)
                                     .vscroll(true)
                                     .default_open(false)
-                                    .show(&ui, |mut ui| {
+                                    .show(&ctx, |mut ui| {
                                         ui.label("Label!");
+
                                         if ui.button("Button!").clicked() {
                                             println!("boom!")
                                         }
+
+                                        ui.separator();
+                                        ui.horizontal(|ui| {
+                                            ui.label(format!(
+                                                "Pixels per point: {}",
+                                                ctx.pixels_per_point()
+                                            ));
+                                            if ui.button("-").clicked() {
+                                                scale_factor = (scale_factor - 0.1).max(0.3);
+                                            }
+                                            if ui.button("+").clicked() {
+                                                scale_factor = (scale_factor + 0.1).min(3.0);
+                                            }
+                                        });
                                     });
                             },
                         );
