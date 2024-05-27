@@ -24,12 +24,11 @@ impl EguiRenderer {
     ) -> EguiRenderer {
         let egui_context = Context::default();
 
-        let pppoint = window.scale_factor() as f32;
         let mut egui_state = egui_winit::State::new(
             egui_context,
             egui::viewport::ViewportId::ROOT,
             &window,
-            Some(window.scale_factor() as f32 * 1000.5),
+            Some(window.scale_factor() as f32),
             None,
         );
         let egui_renderer = Renderer::new(
