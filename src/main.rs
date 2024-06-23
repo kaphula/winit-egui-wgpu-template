@@ -1,7 +1,7 @@
 mod egui_tools;
 
 use crate::egui_tools::EguiRenderer;
-use egui_wgpu::{ScreenDescriptor};
+use egui_wgpu::ScreenDescriptor;
 use std::sync::Arc;
 use wgpu::{Backends, InstanceDescriptor, TextureFormat};
 use winit::dpi::PhysicalSize;
@@ -25,12 +25,7 @@ async fn run() {
     let initial_width = 1360;
     let initial_height = 768;
     window.request_inner_size(PhysicalSize::new(initial_width, initial_height));
-    let instance = wgpu::Instance::new(InstanceDescriptor {
-        backends: Backends::VULKAN,
-        flags: Default::default(),
-        dx12_shader_compiler: Default::default(),
-        gles_minor_version: Default::default(),
-    });
+    let instance = wgpu::Instance::new(InstanceDescriptor::default());
     let mut surface = unsafe { instance.create_surface(window.clone()) }.unwrap();
     let power_pref = wgpu::PowerPreference::default();
     let adapter = instance
