@@ -26,7 +26,9 @@ async fn run() {
     let initial_height = 768;
     window.request_inner_size(PhysicalSize::new(initial_width, initial_height));
     let instance = egui_wgpu::wgpu::Instance::new(InstanceDescriptor::default());
-    let surface = instance.create_surface(window.clone()).expect("Failed to create surface!");
+    let surface = instance
+        .create_surface(window.clone())
+        .expect("Failed to create surface!");
     let power_pref = PowerPreference::default();
     let adapter = instance
         .request_adapter(&RequestAdapterOptions {
@@ -97,7 +99,6 @@ async fn run() {
                     } => {
                         if kb_event.logical_key == Key::Named(NamedKey::Escape) {
                             close_requested = true;
-                            return;
                         }
                     }
                     WindowEvent::ActivationTokenDone { .. } => {}
@@ -159,7 +160,7 @@ async fn run() {
                                     .resizable(true)
                                     .vscroll(true)
                                     .default_open(false)
-                                    .show(&ctx, |ui| {
+                                    .show(ctx, |ui| {
                                         ui.label("Label!");
 
                                         if ui.button("Button!").clicked() {
