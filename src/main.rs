@@ -1,9 +1,9 @@
 mod egui_tools;
 
 use crate::egui_tools::EguiRenderer;
-use egui_wgpu::ScreenDescriptor;
+use egui_wgpu::wgpu::{InstanceDescriptor, PowerPreference, RequestAdapterOptions, TextureFormat};
+use egui_wgpu::{wgpu, ScreenDescriptor};
 use std::sync::Arc;
-use wgpu::{Backends, InstanceDescriptor, TextureFormat};
 use winit::dpi::PhysicalSize;
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
@@ -19,17 +19,17 @@ fn main() {
 async fn run() {
     let event_loop = EventLoop::new().unwrap();
 
-    let mut builder = winit::window::WindowBuilder::new();
+    let builder = winit::window::WindowBuilder::new();
     let window = builder.build(&event_loop).unwrap();
     let window = Arc::new(window);
     let initial_width = 1360;
     let initial_height = 768;
     window.request_inner_size(PhysicalSize::new(initial_width, initial_height));
-    let instance = wgpu::Instance::new(InstanceDescriptor::default());
-    let mut surface = unsafe { instance.create_surface(window.clone()) }.unwrap();
-    let power_pref = wgpu::PowerPreference::default();
+    let instance = egui_wgpu::wgpu::Instance::new(InstanceDescriptor::default());
+    let surface = instance.create_surface(window.clone()).expect("Failed to create surface!");
+    let power_pref = PowerPreference::default();
     let adapter = instance
-        .request_adapter(&wgpu::RequestAdapterOptions {
+        .request_adapter(&RequestAdapterOptions {
             power_preference: power_pref,
             force_fallback_adapter: false,
             compatible_surface: Some(&surface),
@@ -37,7 +37,7 @@ async fn run() {
         .await
         .expect("Failed to find an appropriate adapter");
 
-    let mut features = wgpu::Features::empty();
+    let features = wgpu::Features::empty();
     let (device, queue) = adapter
         .request_device(
             &wgpu::DeviceDescriptor {
@@ -159,7 +159,7 @@ async fn run() {
                                     .resizable(true)
                                     .vscroll(true)
                                     .default_open(false)
-                                    .show(&ctx, |mut ui| {
+                                    .show(&ctx, |ui| {
                                         ui.label("Label!");
 
                                         if ui.button("Button!").clicked() {
