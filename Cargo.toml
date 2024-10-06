@@ -1,13 +1,13 @@
 [package]
 name = "egui-rust-wgpu-hello"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 
 [dependencies]
 #  wgpu = "22.0.0"
-egui = "0.28.1"
+egui = "0.29.1"
 raw-window-handle = "0.6.2"
-egui-wgpu = { version = "0.28.1",features = ["winit"] }
-egui-winit = "0.28.1"
-winit = "0.29.4"
+egui-wgpu = { version = "0.29.1",features = ["winit"] }
+egui-winit = "0.29.1"
+winit = "0.30.5"
 pollster = "0.3.0"
