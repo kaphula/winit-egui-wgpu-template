@@ -69,7 +69,7 @@ impl AppState {
 
         surface.configure(&device, &surface_config);
 
-        let egui_renderer = EguiRenderer::new(&device, surface_config.format, None, 1, &window);
+        let egui_renderer = EguiRenderer::new(&device, surface_config.format, None, 1, window);
 
         let scale_factor = 1.0;
 
@@ -135,7 +135,7 @@ impl App {
         self.state.as_mut().unwrap().resize_surface(width, height);
     }
 
-    fn handel_redraw(&mut self) {
+    fn handle_redraw(&mut self) {
         let state = self.state.as_mut().unwrap();
 
         let screen_descriptor = ScreenDescriptor {
@@ -157,41 +157,49 @@ impl App {
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
 
-        state.egui_renderer.draw(
-            &state.device,
-            &state.queue,
-            &mut encoder,
-            &self.window.as_ref().unwrap(),
-            &surface_view,
-            screen_descriptor,
-            |ctx| {
-                egui::Window::new("winit + egui + wgpu says hello!")
-                    .resizable(true)
-                    .vscroll(true)
-                    .default_open(false)
-                    .show(ctx, |ui| {
-                        ui.label("Label!");
+        let window = self.window.as_ref().unwrap();
 
-                        if ui.button("Button!").clicked() {
-                            println!("boom!")
+        {
+            state.egui_renderer.begin_frame(window);
+
+            egui::Window::new("winit + egui + wgpu says hello!")
+                .resizable(true)
+                .vscroll(true)
+                .default_open(false)
+                .show(state.egui_renderer.context(), |ui| {
+                    ui.label("Label!");
+
+                    if ui.button("Button!").clicked() {
+                        println!("boom!")
+                    }
+
+                    ui.separator();
+                    ui.horizontal(|ui| {
+                        ui.label(format!(
+                            "Pixels per point: {}",
+                            state.egui_renderer.context().pixels_per_point()
+                        ));
+                        if ui.button("-").clicked() {
+                            state.scale_factor = (state.scale_factor - 0.1).max(0.3);
                         }
-
-                        ui.separator();
-                        ui.horizontal(|ui| {
-                            ui.label(format!("Pixels per point: {}", ctx.pixels_per_point()));
-                            if ui.button("-").clicked() {
-                                state.scale_factor = (state.scale_factor - 0.1).max(0.3);
-                            }
-                            if ui.button("+").clicked() {
-                                state.scale_factor = (state.scale_factor + 0.1).min(3.0);
-                            }
-                        });
+                        if ui.button("+").clicked() {
+                            state.scale_factor = (state.scale_factor + 0.1).min(3.0);
+                        }
                     });
-            },
-        );
+                });
+
+            state.egui_renderer.end_frame_and_draw(
+                &state.device,
+                &state.queue,
+                &mut encoder,
+                window,
+                &surface_view,
+                screen_descriptor,
+            );
+        }
+
         state.queue.submit(Some(encoder.finish()));
         surface_texture.present();
-
     }
 }
 
@@ -217,7 +225,7 @@ impl ApplicationHandler for App {
                 event_loop.exit();
             }
             WindowEvent::RedrawRequested => {
-                self.handel_redraw();
+                self.handle_redraw();
 
                 self.window.as_ref().unwrap().request_redraw();
             }

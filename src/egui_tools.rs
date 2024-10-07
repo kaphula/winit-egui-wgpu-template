@@ -8,6 +8,7 @@ use winit::window::Window;
 pub struct EguiRenderer {
     state: State,
     renderer: Renderer,
+    frame_started: bool,
 }
 
 impl EguiRenderer {
@@ -30,7 +31,7 @@ impl EguiRenderer {
             &window,
             Some(window.scale_factor() as f32),
             None,
-            Some(2 * 1024) // default dimension is 2048
+            Some(2 * 1024), // default dimension is 2048
         );
         let egui_renderer = Renderer::new(
             device,
@@ -43,6 +44,7 @@ impl EguiRenderer {
         EguiRenderer {
             state: egui_state,
             renderer: egui_renderer,
+            frame_started: false,
         }
     }
 
@@ -54,7 +56,13 @@ impl EguiRenderer {
         self.context().set_pixels_per_point(v);
     }
 
-    pub fn draw(
+    pub fn begin_frame(&mut self, window: &Window) {
+        let raw_input = self.state.take_egui_input(window);
+        self.state.egui_ctx().begin_pass(raw_input);
+        self.frame_started = true;
+    }
+
+    pub fn end_frame_and_draw(
         &mut self,
         device: &Device,
         queue: &Queue,
@@ -62,14 +70,14 @@ impl EguiRenderer {
         window: &Window,
         window_surface_view: &TextureView,
         screen_descriptor: ScreenDescriptor,
-        mut run_ui: impl FnMut(&Context),
     ) {
+        if !self.frame_started {
+            panic!("begin_frame must be called before end_frame_and_draw can be called!");
+        }
+
         self.ppp(screen_descriptor.pixels_per_point);
 
-        let raw_input = self.state.take_egui_input(window);
-        let full_output = self.state.egui_ctx().run(raw_input, |_ui| {
-            run_ui(self.state.egui_ctx());
-        });
+        let full_output = self.state.egui_ctx().end_pass();
 
         self.state
             .handle_platform_output(window, full_output.platform_output);
@@ -99,9 +107,12 @@ impl EguiRenderer {
             occlusion_query_set: None,
         });
 
-        self.renderer.render(&mut rpass.forget_lifetime(), &tris, &screen_descriptor);
+        self.renderer
+            .render(&mut rpass.forget_lifetime(), &tris, &screen_descriptor);
         for x in &full_output.textures_delta.free {
             self.renderer.free_texture(x)
         }
+
+        self.frame_started = false;
     }
 }
