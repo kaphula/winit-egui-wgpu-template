@@ -1,4 +1,5 @@
 use crate::egui_tools::EguiRenderer;
+use egui_wgpu::wgpu::SurfaceError;
 use egui_wgpu::{wgpu, ScreenDescriptor};
 use std::sync::Arc;
 use winit::application::ApplicationHandler;
@@ -132,10 +133,22 @@ impl App {
     }
 
     fn handle_resized(&mut self, width: u32, height: u32) {
-        self.state.as_mut().unwrap().resize_surface(width, height);
+        if width > 0 && height > 0 {
+            self.state.as_mut().unwrap().resize_surface(width, height);
+        }
     }
 
     fn handle_redraw(&mut self) {
+        // Attempt to handle minimizing window
+        if let Some(window) = self.window.as_ref() {
+            if let Some(min) = window.is_minimized() {
+                if min {
+                    println!("Window is minimized");
+                    return;
+                }
+            }
+        }
+
         let state = self.state.as_mut().unwrap();
 
         let screen_descriptor = ScreenDescriptor {
@@ -144,10 +157,22 @@ impl App {
                 * state.scale_factor,
         };
 
-        let surface_texture = state
-            .surface
-            .get_current_texture()
-            .expect("Failed to acquire next swap chain texture");
+        let surface_texture = state.surface.get_current_texture();
+
+        match surface_texture {
+            Err(SurfaceError::Outdated) => {
+                // Ignoring outdated to allow resizing and minimization
+                println!("wgpu surface outdated");
+                return;
+            }
+            Err(_) => {
+                surface_texture.expect("Failed to acquire next swap chain texture");
+                return;
+            }
+            Ok(_) => {}
+        };
+
+        let surface_texture = surface_texture.unwrap();
 
         let surface_view = surface_texture
             .texture
