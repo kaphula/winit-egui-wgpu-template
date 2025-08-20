@@ -4,8 +4,8 @@ version = "1.0.0"
 edition = "2021"
 
 [dependencies]
-egui = "0.31.1"
-egui-wgpu = { version = "0.31.1",features = ["winit"] }
-egui-winit = "0.31.1"
-winit = "0.30.9"
+egui = "0.32.1"
+egui-wgpu = { version = "0.32.1", features = ["winit"] }
+egui-winit = "0.32.1"
+winit = "0.30.12"
 pollster = "0.4.0"
