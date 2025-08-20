@@ -43,8 +43,8 @@ impl AppState {
                     required_features: features,
                     required_limits: Default::default(),
                     memory_hints: Default::default(),
-                },
-                None,
+                    trace: Default::default()
+                }
             )
             .await
             .expect("Failed to create device");
